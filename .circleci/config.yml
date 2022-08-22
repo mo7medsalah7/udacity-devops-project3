@@ -18,9 +18,18 @@ commands:
           name: Install Ansible
           command: |
             sudo apt update
-            sudo apt install software-properties-common
+            sudo apt install software-properties-common -y
             sudo add-apt-repository --yes --update ppa:ansible/ansible
-            sudo apt install ansible
+            sudo apt install ansible -y
+
+   install_nodejs:
+    description: Installing NodeJS
+    steps:
+      - run:
+          name: Installing NodeJS
+          command: |
+            curl -fsSL https://deb.nodesource.com/setup_13.x | sudo -E bash -
+            sudo apt install -y nodejs
 
    destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
@@ -33,7 +42,7 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
-            aws cloudformation delete-stack --stack-nameudacityproject-backend-<< parameters.Workflow_ID >>
+            aws cloudformation delete-stack --stack-name udacityproject-backend-<< parameters.Workflow_ID >>
             aws s3 rm s3://udapeople-<<parameters.Workflow_ID>> --recursive
             aws cloudformation delete-stack --stack-name udapeople-frontend-<< parameters.Workflow_ID >>
 
@@ -214,7 +223,7 @@ jobs:
           name: Run migrations
           command: |
            cd backend
-           npm install
+           npm install --force
            npm run migrations > migrations_dump.txt
       - run:
           name: Send migration results to KVDB
@@ -225,27 +234,38 @@ jobs:
             fi
       - destroy-environment
 
-#   deploy-frontend:
-#     docker:
-#       # Docker image here that supports AWS CLI
-#     steps:
-#       # Checkout code from git
-#       - run:
-#           name: Install dependencies
-#           command: |
-#             # your code here
-#       - run:
-#           name: Get backend url
-#           command: |
-#             # your code here
-#             export API_URL="http://${BACKEND_IP}:3030"
-#             echo "${API_URL}"
-#       - run:
-#           name: Deploy frontend objects
-#           command: |
-#             # your code here
-#       # Here's where you will add some code to rollback on failure      
-                    
+  deploy-frontend:
+    docker:
+      - image: cimg/node:13.8.0
+    steps:
+      - checkout
+      - install_aws_cli
+      - install_nodejs
+      - restore_cache:
+        keys: [frontend_build]
+      - run:
+          name: Install dependencies
+          command: |
+            cd frontend
+            npm install
+      - run:
+          name: Get backend url
+          command: |
+            BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
+            --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+            --query 'Reservations[*].Instances[*].PublicIpAddress' \
+            --output text)
+            echo "API_URL=http://${BACKEND_PUBLIC_IP}:3030" >> frontend/.env
+            cat frontend/.env
+      - run:
+          name: Deploy frontend objects
+          command: |
+            cd frontend
+            npm run build
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+      - destroy-environment
+      - revert_migrations
+
 #   deploy-backend:
 #     docker:
 #       # Docker image here that supports Ansible

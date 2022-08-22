@@ -2,7 +2,7 @@
 
 - name: "configuration play." 
   hosts: web
-  user: ubuntu
+  remote_user: ubuntu
   become: true
   become_method: sudo
   become_user: root  
@@ -23,11 +23,6 @@
       change_when: false
 
     - setup: 
-
-  # Get the environment variables from CircleCI and add to the EC2 instance
-  environment:
-    - TYPEORM_CONNECTION: "{{ lookup('env', 'TYPEORM_CONNECTION')}}"  
-    # Add more env vars here
 
   roles:
     - configure-server

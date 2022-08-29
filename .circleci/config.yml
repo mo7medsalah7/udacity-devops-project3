@@ -330,7 +330,7 @@ jobs:
       - install_aws_cli
       - install_nodejs
       - run:
-          name: Smoke test for Backend 
+          name: Smoke test for Backend. 
           command: |
             BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
               --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
@@ -345,7 +345,7 @@ jobs:
               exit 1
             fi
       - run:
-          name: Smoke test for Frontend 
+          name: Smoke test for Frontend ...
           command: |
             FRONTEND_SITE=http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website.${AWS_DEFAULT_REGION}.amazonaws.com
             if curl -s $FRONTEND_SITE | grep "welcome"

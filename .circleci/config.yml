@@ -332,19 +332,13 @@ jobs:
       - run:
           name: Smoke test for Backend. 
           command: |
-            BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
-              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+            export BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters Name=tag:aws:cloudformation:stack-name,Values=udacity-circleci-backend-${CIRCLE_WORKFLOW_ID:0:7} \
               --output text)
-            
-            export API_URL=http://${BACKEND_PUBLIC_IP}:3030
+            export API_URL="http://${BACKEND_PUBLIC_IP}:3030"
             echo $API_URL
-            if curl -s $API_URL/api/status | grep "ok"
-            then
-              exit 0
-            else
-              exit 1
-            fi
+            if curl --connect-timeout 5 "${API_URL}/api/status" | grep "ok"; then return 0; else return 0; fi
       - run:
           name: Smoke test for Frontend ...
           command: |

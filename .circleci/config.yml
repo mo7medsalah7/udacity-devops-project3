@@ -338,6 +338,7 @@ jobs:
               --output text)
             
             export API_URL=http://${BACKEND_PUBLIC_IP}:3030
+            echo $API_URL
             if curl -s $API_URL/api/status | grep "ok"
             then
               exit 0
@@ -347,7 +348,8 @@ jobs:
       - run:
           name: Smoke test for Frontend ...
           command: |
-            FRONTEND_SITE=http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website.${AWS_DEFAULT_REGION}.amazonaws.com
+            export FRONTEND_SITE=http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website.${AWS_DEFAULT_REGION}.amazonaws.com
+            echo $FRONTEND_SITE
             if curl -s $FRONTEND_SITE | grep "welcome"
             then
               exit 0

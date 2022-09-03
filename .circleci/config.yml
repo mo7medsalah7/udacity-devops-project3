@@ -1,5 +1,10 @@
 version: 2.1
 
+parameters:
+  workflow_id:
+    type: String
+    default: '${CIRCLE_WORKFLOW_ID}'
+
 commands:
    install_aws_cli:
     description: Install AWS CLI 
@@ -222,6 +227,10 @@ jobs:
             cd .circleci/ansible
             cat inventory.txt
             ansible-playbook -i inventory.txt configure-server.yml
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/backend
       - destroy-environment
 
   run-migrations:
@@ -230,6 +239,10 @@ jobs:
     steps:
       - checkout
       - install_aws_cli
+      - restore_cache:
+          keys: [backend_build]
+      - attach_workspace:
+          at: ~/
       - run:
           name: Run Migrations
           command: |
@@ -310,9 +323,9 @@ jobs:
       - run:
           name: Backend Deployment
           command: |
-            export TYPEORM_MIGRATIONS_DIR=./src/migrations
-            export TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts
-            export TYPEORM_MIGRATIONS=./src/migrations/*.ts
+            # export TYPEORM_MIGRATIONS_DIR=./src/migrations
+            # export TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts
+            # export TYPEORM_MIGRATIONS=./src/migrations/*.ts
 
             cd .circleci/ansible
             cat inventory.txt
@@ -337,22 +350,22 @@ jobs:
               --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --output text)
             export API_URL="http://${BACKEND_PUBLIC_IP}:3030"
-            if curl -s $API_URL/api/status | grep "ok"
+            if curl -s "${API_URL}/api/status" | grep "ok"
             then
-              exit 0
+              return 0
             else
-              exit 1
+              return 1
             fi
       - run:
           name: Smoke test for Frontend ...
           command: |
             export FRONTEND_SITE=http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website.${AWS_DEFAULT_REGION}.amazonaws.com
             echo $FRONTEND_SITE
-            if curl -s $FRONTEND_SITE | grep "welcome !!!"
+            if curl ${FRONTEND_SITE} | grep "welcome"
             then
-              exit 0
+              return 0
             else
-              exit 1
+              return 1
             fi
       - destroy-environment
       - revert-migrations

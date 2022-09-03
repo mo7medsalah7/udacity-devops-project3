@@ -350,7 +350,7 @@ jobs:
               --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --output text)
             export API_URL="http://${BACKEND_PUBLIC_IP}:3030"
-            if curl -s "${API_URL}/api/status" | grep "ok"; then return 0; else return 1; fi
+            if curl --connect-timeout 5 -s "${API_URL}/api/status" | grep "ok"; then return 0; else return 1; fi
       - run:
           name: Smoke test for Frontend ...
           command: |

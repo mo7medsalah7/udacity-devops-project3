@@ -344,7 +344,7 @@ jobs:
           command: |
             export FRONTEND_SITE=http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website.${AWS_DEFAULT_REGION}.amazonaws.com
             echo $FRONTEND_SITE
-            if curl -s $FRONTEND_SITE | grep "welcome"
+            if curl -s $FRONTEND_SITE | grep "welcome !!!"
             then
               exit 0
             else

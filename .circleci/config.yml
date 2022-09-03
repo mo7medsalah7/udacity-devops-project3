@@ -357,9 +357,9 @@ jobs:
       - run:
           name: Smoke test for Frontend ...
           command: |
-            export FRONTEND_SITE="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-${AWS_DEFAULT_REGION}.amazonaws.com"
-            echo $FRONTEND_SITE
-            if curl ${FRONTEND_SITE} | grep "welcome"; then exit 0; else exit 1; fi
+            export URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-${AWS_DEFAULT_REGION}.amazonaws.com/#/employees"            
+            echo $URL
+            if curl ${URL} | grep "Welcome"; then return 0; else return 1; fi
       - destroy-environment
       - revert-migrations
 

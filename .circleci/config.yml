@@ -343,7 +343,7 @@ jobs:
       - install_aws_cli
       - install_nodejs
       - run:
-          name: Smoke test for Backend. 
+          name: Smoke Test For Backend. 
           command: |
             export BACKEND_PUBLIC_IP=$(aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \

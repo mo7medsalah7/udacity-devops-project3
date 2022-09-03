@@ -359,7 +359,7 @@ jobs:
           command: |
             export FRONTEND_URL=http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-${AWS_DEFAULT_REGION}.amazonaws.com/#/employees
             echo $FRONTEND_URL
-            if curl ${FRONTEND_URL} | grep "Welcome"; then return 0; else return 1; fi
+            if curl ${FRONTEND_URL} | grep "Welcome"; then exit 0; else exit 1; fi
       - destroy-environment
       - revert-migrations
 

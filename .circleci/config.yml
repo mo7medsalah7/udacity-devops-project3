@@ -387,25 +387,33 @@ jobs:
               --stack-name UdacityProjectStack
       - destroy-environment
       - revert-migrations
-# cleanup:
-#     docker:
-#       # Docker image here
-#     steps:
-#       # Checkout code from git
-#       - run:
-#           name: Get old stack workflow id
-#           command: |
-#             # your code here
-#             export OldWorkflowID="the id here"
-#             export STACKS=[] #put the list of stacks here
-#       - run:
-#           name: Remove old stacks and files
-#           command: |
-#             if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
-#             then
-#               # your code here
-#             fi
-            
+
+
+cleanup:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - install_aws_cli
+      - install_nodejs
+      - run:
+          name: Retrieve old stack WorkflowID & remove related stacks
+          command: |
+            export STACKS=($(aws cloudformation list-stacks \
+              --query "StackSummaries[*].StackName" \
+              --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
+            echo Stack names: "${STACKS[@]}"
+            export PreviousWorkflowID=$(curl --insecure https://kvdb.io/${KVDB_BUCKET}/previous_workflow_id)
+            echo Previous Workflow ID: $PreviousWorkflowID
+
+            if [[ "${STACKS[@]}" =~ "${PreviousWorkflowID}" ]]
+            then
+              aws s3 rm "s3://udapeople-${PreviousWorkflowID}" --recursive
+              aws cloudformation delete-stack --stack-name "udacityproject-backend-${PreviousWorkflowID}"
+              aws cloudformation delete-stack --stack-name "udacityproject-frontend-${PreviousWorkflowID}"
+            fi
+      - destroy-environment
+      - revert-migrations
 
 workflows:
   default:
